@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111113">
+  <meta name="description" content="Личное поздравление для Вити.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="board.css">
+  <title>Витя, с днём рождения</title>
+  <style>
+    :root { color-scheme: dark; --bg: #111113; --text: #f6f5f7; --muted: #aaa6af; --pink: #ff5caf; --ease: cubic-bezier(.22, 1, .36, 1); }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; }
+    body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, #2b1b2d 0, transparent 65%); }
+    main { min-height: 100svh; display: grid; place-items: center; padding: clamp(24px, 5vw, 64px) 20px; position: relative; }
+    .scene { width: min(100%, 600px); text-align: center; }
+    .eyebrow { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 30px; color: var(--muted); font: 14px/1.5 'Courier New', monospace; }
+    .tag { color: var(--pink); border: 1px solid #ff5caf70; padding: 4px 9px; font-weight: 700; }
+    .stage { display: grid; align-items: center; isolation: isolate; }
+    .stage > * { grid-area: 1 / 1; min-width: 0; }
+    #closed { padding: 84px 0 36px; }
+    .envelope { display: block; position: relative; width: min(360px, 100%); aspect-ratio: 18 / 11; margin: auto; border: 0; padding: 0; background: none; perspective: 1400px; cursor: pointer; transition: transform .4s var(--ease); }
+    .envelope:disabled { cursor: default; }
+    .pocket { position: absolute; inset: 0; background: #2d2932; border: 1px solid #5e5265; border-radius: 4px; box-shadow: 0 24px 70px #0008; }
+    .paper { position: absolute; inset: 14px 18px 12px; z-index: 2; background: #f1eaf0; color: #171217; border-radius: 2px; display: grid; place-items: center; }
+    .paper span { font: 700 clamp(24px, 7vw, 38px)/1 'Courier New', monospace; }
+    .front { position: absolute; inset: 0; z-index: 3; background: #403647; border-radius: 4px; clip-path: polygon(0 0, 50% 58%, 100% 0, 100% 100%, 0 100%); }
+    .bottom { position: absolute; inset: 0; z-index: 4; background: #4b4052; border-radius: 4px; clip-path: polygon(0 100%, 50% 44%, 100% 100%); }
+    .flap { position: absolute; inset: 0; z-index: 5; background: #66516a; clip-path: polygon(0 0, 100% 0, 50% 58%); transform-origin: 50% 0; backface-visibility: visible; }
+    .seal { position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%); z-index: 6; width: 52px; height: 52px; display: grid; place-items: center; background: var(--pink); color: #21101a; border-radius: 50%; font: 700 22px/1 'Courier New', monospace; box-shadow: 0 0 28px #ff5caf25; }
+    .hint { margin: 30px 0 0; color: var(--muted); font: 14px/1.5 'Courier New', monospace; }
+    #greeting { opacity: 0; transform: translateY(18px); pointer-events: none; }
+    .stage.is-open #closed { visibility: hidden; opacity: 0; pointer-events: none; }
+    .stage.is-open #greeting { opacity: 1; transform: none; pointer-events: auto; }
+    .letter { position: relative; padding: clamp(36px, 7vw, 56px) clamp(20px, 5vw, 42px); border: 1px solid #4b384a; background: #1c181f; box-shadow: 0 24px 80px #0005; text-align: left; }
+    .letter::before { content: ''; position: absolute; left: -1px; right: -1px; top: -1px; height: 3px; background: var(--pink); }
+    .letter-label { margin: 0 0 24px; color: var(--pink); font: 14px/1.5 'Courier New', monospace; }
+    h1 { font-size: clamp(36px, 8vw, 64px); line-height: 1.15; letter-spacing: -.045em; margin: 0 0 36px; font-weight: 800; overflow-wrap: anywhere; }
+    .glyph { visibility: hidden; }
+    .glyph.shown { visibility: visible; }
+    .next { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; padding: 14px 24px; background: var(--pink); border: 1px solid var(--pink); color: #21101a; font: 700 16px/1.4 Arial, sans-serif; text-decoration: none; transition: background .2s, transform .2s; }
+    .next:active { transform: translateY(2px); }
+    .next.pending { visibility: hidden; pointer-events: none; }
+    .waiting-title { margin: 0; font-size: clamp(32px, 7vw, 54px); letter-spacing: -.035em; line-height: 1.2; overflow-wrap: anywhere; }
+    .back { display: inline-flex; align-items: center; min-height: 48px; margin-top: 24px; color: var(--muted); text-underline-offset: 6px; font-size: 16px; }
+    .envelope:focus-visible, a:focus-visible { outline: 3px solid var(--pink); outline-offset: 8px; }
+    h1:focus, h2:focus { outline: none; }
+    button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .page-enter { animation: appear .55s var(--ease) both; }
+    @keyframes appear { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    @media (hover: hover) and (pointer: fine) { .envelope:not(:disabled):hover { transform: translateY(-5px); } .next:hover { background: #ff80bf; } .back:hover { color: var(--text); } }
+    @media (max-width: 380px) { main { padding-inline: 16px; } .eyebrow { gap: 10px; } .next { width: 100%; padding-inline: 12px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="scene" id="intro" aria-label="Письмо для Вити">
+      <p class="eyebrow"><span class="tag">ВИТЯ</span><span>лично в руки</span></p>
+      <div class="stage" id="stage">
+        <div id="closed">
+          <button type="button" class="envelope" id="envelope" aria-label="Открыть конверт" aria-expanded="false" aria-controls="greeting">
+            <span class="pocket" aria-hidden="true"></span><span class="paper" aria-hidden="true"><span>С ДР!</span></span>
+            <span class="front" aria-hidden="true"></span><span class="bottom" aria-hidden="true"></span><span class="flap" aria-hidden="true"></span><span class="seal" aria-hidden="true">В</span>
+          </button>
+          <p class="hint">нажми, чтобы открыть</p>
+        </div>
+        <div id="greeting" inert aria-hidden="true">
+          <div class="letter">
+            <p class="letter-label">с днём рождения!</p>
+            <h1 tabindex="-1" id="title" aria-label="витя с др🫩🥀"><span id="typed" aria-hidden="true">витя с др🫩🥀</span></h1>
+            <a class="next pending" id="next-link" href="#next" tabindex="-1">витя соси яйца</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="scene board-view" id="next-page" hidden aria-label="Поздравление для Вити">
+      <header class="board-header">
+        <div>
+          <p class="board-eyebrow">для Вити / от своего</p>
+          <h2 id="next-title" tabindex="-1">С др, <span>друн.</span></h2>
+        </div>
+        <a class="back board-back" href="#letter">назад к письму</a>
+      </header>
+      <div class="cork-board" id="cork-board" aria-label="Доска с нашими фотографиями и пожеланиями">
+        <div class="board-pair pair-one">
+          <figure class="board-piece photo-piece" style="--delay: 0ms">
+            <button class="photo-card" type="button" data-photo="assets/images/photo-1.jpg" aria-label="Открыть фотографию 1 крупнее">
+              <span class="pin" aria-hidden="true"></span>
+              <img src="assets/images/photo-1.jpg" width="770" height="1248" alt="Наше совместное фото в классе" decoding="async">
+              <span class="photo-caption"><span>кадр 01</span><span>мы.</span></span>
+            </button>
+          </figure>
+          <article class="board-piece note-piece" style="--delay: 90ms">
+            <div class="paper-note note-cream">
+              <span class="pin" aria-hidden="true"></span>
+              <p>Поздравляю с днем рождения друн. Желаю тебе счастья, здоровья, любви и полного хайпа.</p>
+            </div>
+          </article>
+        </div>
+        <div class="board-pair pair-two">
+          <figure class="board-piece photo-piece" style="--delay: 180ms">
+            <button class="photo-card" type="button" data-photo="assets/images/photo-2.jpg" aria-label="Открыть фотографию 2 крупнее">
+              <span class="pin" aria-hidden="true"></span>
+              <img src="assets/images/photo-2.jpg" width="1084" height="880" alt="Наше совместное фото у экспоната" decoding="async">
+              <span class="photo-caption"><span>кадр 02</span><span>мы опять.</span></span>
+            </button>
+          </figure>
+          <article class="board-piece note-piece" style="--delay: 270ms">
+            <div class="paper-note note-lined">
+              <span class="pin" aria-hidden="true"></span>
+              <p>Я верю что ты идеально начнешь понимать весь учебный материал и добьешься всех поставленных целей</p>
+            </div>
+          </article>
+        </div>
+        <div class="board-pair pair-three">
+          <figure class="board-piece photo-piece" style="--delay: 360ms">
+            <button class="photo-card" type="button" data-photo="assets/images/photo-3.jpg" aria-label="Открыть фотографию 3 крупнее">
+              <span class="pin" aria-hidden="true"></span>
+              <img src="assets/images/photo-3.jpg" width="446" height="382" alt="Наше совместное фото на диване" decoding="async">
+              <span class="photo-caption"><span>кадр 03</span><span>тоже мы.</span></span>
+            </button>
+          </figure>
+          <article class="board-piece note-piece" style="--delay: 450ms">
+            <div class="paper-note note-pink">
+              <span class="pin" aria-hidden="true"></span>
+              <p>Надеюсь что ты в будущем откроешь компанию, она станет успешной и ты сделаешь меня замом</p>
+            </div>
+          </article>
+        </div>
+      </div>
+      <p class="board-footer">нажми на фото, чтобы рассмотреть</p>
+    </section>
+  </main>
+  <dialog class="photo-dialog" id="photo-dialog" aria-label="Фотография крупным планом">
+    <div class="photo-dialog-inner">
+      <button class="photo-close" type="button" id="photo-close">Закрыть</button>
+      <img id="full-photo" alt="">
+    </div>
+  </dialog>
+  <noscript><p style="text-align:center;padding:24px">Чтобы открыть письмо, включи JavaScript в браузере.</p></noscript>
+  <script src="app.js"></script>
+</body>
+</html>
